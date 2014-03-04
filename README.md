@@ -25,5 +25,15 @@ cd paldot-api
 cp .env.example .env
 ```
 
+## Documentation
+
+#### /api/v0/users/create.json
+
+```
+curl -X POST http://0.0.0.0:3000/api/v0/users/create.json \
+-d "email=dude@mailinator.com" \
+-d "twitterfriend=scottmotte"
+```
+
 
 

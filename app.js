@@ -5,9 +5,6 @@ var crypto      = require('crypto');
 var redis       = require('redis');
 var sanitize    = require('validator').sanitize;
 var Validator   = require('validator').Validator;
-var passport    = require('passport');
-var TwitterStrategy = require('passport-twitter').Strategy;
-var twitter     = require('twitter');
 
 var e           = module.exports;
 e.ENV           = process.env.NODE_ENV || 'development';
@@ -34,88 +31,97 @@ if (redis_url.auth) {
 var sendgrid    = require('sendgrid')(SMTP_USERNAME, SMTP_PASSWORD);
 
 var port        = parseInt(process.env.PORT) || 3000;
-var plugins = {
-  yar: {
-    cookieOptions: {
-      password: COOKIE_SECRET, // cookie secret
-      isSecure: false // required for non-https applications
-    }
-  },
-  travelogue: {}
-};
-
 var Hapi        = require('hapi');
 server          = new Hapi.Server(+port, '0.0.0.0', { cors: true });
-server.pack.require(plugins, function (err) { 
-  if (err) {
-    throw err;
-  }
-});
 
-server.auth.strategy('passport', 'passport');
+// Setup validation
+Validator.prototype.error = function (msg) {
+  this._errors.push(new Error(msg));
+  return this;
+}
+Validator.prototype.errors = function () {
+  return this._errors;
+}
 
-var Passport = server.plugins.travelogue.passport;
-Passport.use(new TwitterStrategy({
-    consumerKey: TWITTER_CONSUMER_KEY,
-    consumerSecret: TWITTER_CONSUMER_SECRET,
-    callbackURL: ROOT_URL + "/api/v0/twitter/auth/callback"
-  },
-  function(accessToken, refreshToken, profile, done) {
-    console.log("hello");
-    console.log(accessToken);
-    console.log(refreshToken);
-    return done(null, profile);
-  }
-));
-Passport.serializeUser( function(user, done) {
-    done( null, user );
-});
-Passport.deserializeUser( function(obj, done) {
-    done( null, obj );
-});
+// Models
+//// User
+var User = module.exports.User = function(self){
+  var self            = self || 0;
+  this._validator     = new Validator();
+  this.email          = sanitize(self.email).trim().toLowerCase() || "";
+  this.twitterfriend  = sanitize(self.twitterfriend).trim().toLowerCase() || "";
 
-//// Routes
-var twitter_routes = {
-  auth: {
-    handler: function (request, reply) {
-      Passport.authenticate('twitter')(request, reply);
-    }
-  },
-  auth_callback: {
-    handler: function (request, reply) {
-      Passport.authenticate('twitter', {
-        failureRedirect: '/api/v0/twitter/auth',
-        successRedirect: '/api/v0/twitter/auth/success'
-      })(request, reply, function () {
-        reply().redirect('/');
-      });
-    }
-  },
-  auth_success: {
-    handler: function (request, reply) {
-      console.log("LOG REQUEST");
-      console.log(request.payload);
-      // on a success redirect to the choose page
-      var url = STATIC_ROOT_URL + "/choose.html";
-      reply().redirect(url);
-    }
+  return this;
+};
+
+User.prototype.toJson = function(fn) {
+  var _this   = this;
+
+  return {
+    email: _this.email,
+    twitterfriend: _this.twitterfriend
   }
 };
 
+User.prototype.create = function(fn){
+  var _this   = this;
+  var key     = "apps/"+_this.email;
+
+  this._validator.check(_this.email, "Invalid email.").isEmail();
+
+  console.log(_this);
+
+  var errors = this._validator.errors();
+  delete(this._validator);
+
+  if (errors.length) {
+    fn(errors, null);
+  } else {
+    db.EXISTS(key, function(err, res) {
+      if (err) { return fn(err, null); }
+
+      if (res == 1) {
+        var err = new Error("That email already exists.");
+        fn(err, null);
+      } else {
+        db.SADD("users", _this.email); 
+        db.HMSET(key, _this, function(err, res) {
+          fn(err, _this);
+        }); 
+      }
+    });
+  }
+
+  return this;
+};
+
+var users = {
+  create: {
+    handler: function (request, reply) {
+      var payload       = request.payload;
+      var email         = payload.email;
+      var twitterfriend = payload.twitterfriend;
+      var app = new User({
+        email: email,
+        twitterfriend: twitterfriend
+      }); 
+
+      app.create(function(err, res) {
+        if (err) {
+          var message = err.length ? err[0].message : err.message;
+          reply({success: false, error: {message: message}});
+        } else {
+          reply({success: true, user: res.toJson()});
+        }
+      });
+    }
+  }
+}
+
 server.route({
-  method  : 'GET',
-  path    : '/api/v0/twitter/auth',
-  config  : twitter_routes.auth
-});
-server.route({
-  method  : 'GET',
-  path    : '/api/v0/twitter/auth/callback',
-  config  : twitter_routes.auth_callback
-});
-server.route({
-  method  : 'GET',
-  path    : '/api/v0/twitter/auth/success',
-  config  : twitter_routes.auth_success
+  method  : 'POST',
+  path    : '/api/v0/users/create.json',
+  config  : users.create
 });
 
 server.start(function() {
