@@ -94,7 +94,7 @@ var twitter_routes = {
   auth_success: {
     handler: function (request, reply) {
       console.log("LOG REQUEST");
-      console.log(request.body);
+      console.log(request.payload);
       // on a success redirect to the choose page
       var url = STATIC_ROOT_URL + "/choose.html";
       reply().redirect(url);
