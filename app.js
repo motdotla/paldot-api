@@ -5,8 +5,9 @@ var crypto      = require('crypto');
 var redis       = require('redis');
 var sanitize    = require('validator').sanitize;
 var Validator   = require('validator').Validator;
-var passport    = require('passport')
+var passport    = require('passport');
 var TwitterStrategy = require('passport-twitter').Strategy;
+var twitter     = require('twitter');
 
 var e           = module.exports;
 e.ENV           = process.env.NODE_ENV || 'development';
@@ -74,7 +75,7 @@ Passport.deserializeUser( function(obj, done) {
 });
 
 //// Routes
-var twitter = {
+var twitter_routes = {
   auth: {
     handler: function (request, reply) {
       Passport.authenticate('twitter')(request, reply);
@@ -82,8 +83,6 @@ var twitter = {
   },
   auth_callback: {
     handler: function (request, reply) {
-      console.log(request.payload);
-      
       Passport.authenticate('twitter', {
         failureRedirect: '/api/v0/twitter/auth',
         successRedirect: '/api/v0/twitter/auth/success'
@@ -94,6 +93,8 @@ var twitter = {
   },
   auth_success: {
     handler: function (request, reply) {
+      console.log("LOG REQUEST");
+      console.log(request.body);
       // on a success redirect to the choose page
       var url = STATIC_ROOT_URL + "/choose.html";
       reply().redirect(url);
@@ -104,17 +105,17 @@ var twitter = {
 server.route({
   method  : 'GET',
   path    : '/api/v0/twitter/auth',
-  config  : twitter.auth
+  config  : twitter_routes.auth
 });
 server.route({
   method  : 'GET',
   path    : '/api/v0/twitter/auth/callback',
-  config  : twitter.auth_callback
+  config  : twitter_routes.auth_callback
 });
 server.route({
   method  : 'GET',
   path    : '/api/v0/twitter/auth/success',
-  config  : twitter.auth_success
+  config  : twitter_routes.auth_success
 });
 
 server.start(function() {
