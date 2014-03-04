@@ -1,0 +1,22 @@
+{
+  "name": "paldot-api",
+  "version": "0.0.1",
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  },
+  "main": "app.js",
+  "description": "",
+  "dependencies": {
+    "dotenv": "0.2.0",
+    "hapi": "2.6.0",
+    "passport": "0.2.0",
+    "travelogue": "1.0.1",
+    "yar": "1.1.0",
+    "redis": "0.9.0",
+    "request": "2.21.0",
+    "sendgrid": "1.0.2",
+    "twitter": "0.2.7",
+    "validator": "1.5.1"
+  }
+}
