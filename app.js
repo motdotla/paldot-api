@@ -109,6 +109,11 @@ server.route({
   path    : '/api/v0/twitter/auth/callback',
   config  : twitter.auth_callback
 });
+server.route({
+  method  : 'GET',
+  path    : '/api/v0/twitter/auth/success',
+  config  : twitter.auth_success
+});
 
 server.start(function() {
   console.log('paldot-api server started at: ' + server.info.uri);
