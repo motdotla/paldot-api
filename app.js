@@ -83,8 +83,8 @@ var twitter = {
   auth_callback: {
     handler: function (request, reply) {
       Passport.authenticate('twitter', {
-        failureRedirect: '/twitter/auth',
-        successRedirect: '/twitter/auth/success'
+        failureRedirect: '/api/v0/twitter/auth',
+        successRedirect: '/api/v0/twitter/auth/success'
       })(request, reply, function () {
         reply().redirect('/');
       });
