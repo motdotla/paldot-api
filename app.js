@@ -82,6 +82,8 @@ var twitter = {
   },
   auth_callback: {
     handler: function (request, reply) {
+      console.log(request.payload);
+      
       Passport.authenticate('twitter', {
         failureRedirect: '/api/v0/twitter/auth',
         successRedirect: '/api/v0/twitter/auth/success'
