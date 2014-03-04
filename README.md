@@ -10,6 +10,7 @@ cd paldot-api
 heroku create paldot-api
 heroku config:set TWITTER_CONSUMER_KEY=something
 heroku config:set TWITTER_CONSUMER_SECRET=something
+heroku config:set ROOT_URL=https://paldot.github.com
 heroku addons:add sendgrid
 heroku addons:add redistogo
 git push heroku master

@@ -8,7 +8,6 @@ var Validator   = require('validator').Validator;
 var passport    = require('passport')
 var TwitterStrategy = require('passport-twitter').Strategy;
 
-
 var e           = module.exports;
 e.ENV           = process.env.NODE_ENV || 'development';
 
@@ -21,6 +20,7 @@ var REDIS_URL               = process.env.REDIS_URL || process.env.REDISTOGO_URL
 var TWITTER_CONSUMER_KEY    = process.env.TWITTER_CONSUMER_KEY;
 var TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
 var COOKIE_SECRET           = process.env.COOKIE_SECRET || "something";
+var ROOT_URL                = process.env.ROOT_URL || "http://0.0.0.0:3000"
 
 // Libraries
 var redis_url   = require("url").parse(REDIS_URL);
@@ -32,19 +32,6 @@ if (redis_url.auth) {
 var sendgrid    = require('sendgrid')(SMTP_USERNAME, SMTP_PASSWORD);
 
 var port        = parseInt(process.env.PORT) || 3000;
-//var config = {
-//  hostname: 'localhost',
-//  port: port,
-//  urls: {
-//    failureRedirect: '/login',
-//    successRedirect: '/'
-//  },
-//  twitter: {
-//    consumerKey: TWITTER_CONSUMER_KEY,
-//    consumerSecret: TWITTER_CONSUMER_SECRET,
-//    callbackURL: "http://localhost:8000/auth/facebook/callback"
-//  }
-//};
 var plugins = {
   yar: {
     cookieOptions: {
@@ -69,7 +56,7 @@ var Passport = server.plugins.travelogue.passport;
 Passport.use(new TwitterStrategy({
     consumerKey: TWITTER_CONSUMER_KEY,
     consumerSecret: TWITTER_CONSUMER_SECRET,
-    callbackURL: server.info.uri + "/api/v0/twitter/auth/callback"
+    callbackURL: ROOT_URL + "/api/v0/twitter/auth/callback"
   },
   function(accessToken, refreshToken, profile, done) {
     console.log("hello");
