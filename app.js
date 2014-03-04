@@ -20,7 +20,8 @@ var REDIS_URL               = process.env.REDIS_URL || process.env.REDISTOGO_URL
 var TWITTER_CONSUMER_KEY    = process.env.TWITTER_CONSUMER_KEY;
 var TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
 var COOKIE_SECRET           = process.env.COOKIE_SECRET || "something";
-var ROOT_URL                = process.env.ROOT_URL || "http://0.0.0.0:3000"
+var ROOT_URL                = process.env.ROOT_URL || "http://0.0.0.0:3000";
+var STATIC_ROOT_URL         = process.env.STATIC_ROOT_URL || "http://paldot.github.com";
 
 // Libraries
 var redis_url   = require("url").parse(REDIS_URL);
@@ -83,15 +84,19 @@ var twitter = {
     handler: function (request, reply) {
       Passport.authenticate('twitter', {
         failureRedirect: '/twitter/auth',
-        successRedirect: '/success'
+        successRedirect: '/twitter/auth/success'
       })(request, reply, function () {
         reply().redirect('/');
       });
     }
+  },
+  auth_success: {
+    handler: function (request, reply) {
+      // on a success redirect to the choose page
+      var url = STATIC_ROOT_URL + "/choose.html";
+      reply().redirect(url);
+    }
   }
-};
-var success = {
-
 };
 
 server.route({
